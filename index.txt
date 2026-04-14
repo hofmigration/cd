@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HOF Compliance Audit — Global Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:        #12266e;
+  --navy-deep:   #0b1a52;
+  --navy-mid:    #1e3a8a;
+  --blue:        #2563eb;
+  --blue-lt:     #3b82f6;
+  --acc:         #2563eb;   /* Global = blue accent */
+  --acc2:        #7c3aed;
+  --bg:          #eef3ff;
+  --surface:     #f4f7ff;
+  --card:        #ffffff;
+  --border:      #c7d7f5;
+  --border-soft: #dce8fb;
+  --text:        #0f1c4d;
+  --muted:       #5a6a8e;
+  --yes:         #16a34a;
+  --no:          #dc2626;
+  --na:          #d97706;
+  --r:           10px;
+  --font:        'Space Grotesk', sans-serif;
+  --mono:        'Space Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+
+/* ─── HEADER ─────────────────────────────────── */
+.hdr {
+  height: 56px; flex-shrink: 0;
+  background: var(--navy-deep);
+  border-bottom: 2px solid var(--acc);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; z-index: 200;
+}
+.hdr-brand { display: flex; align-items: center; gap: 11px; }
+.hdr-badge {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.hdr-name { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .02em; }
+.hdr-sub  { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .07em; }
+.hdr-right { display: flex; align-items: center; gap: 9px; }
+.hpill {
+  padding: 3px 11px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; letter-spacing: .05em; font-family: var(--mono);
+}
+.hpill.global { background: rgba(37,99,235,.18); color: #93c5fd; border: 1px solid rgba(37,99,235,.35); }
+.hpill.live   { background: rgba(22,163,74,.12);  color: #4ade80; border: 1px solid rgba(22,163,74,.25); }
+.btn-hdr {
+  padding: 6px 16px; border-radius: 7px; border: none;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  color: #fff; font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s; display: flex; align-items: center; gap: 5px;
+}
+.btn-hdr:hover { opacity: .82; }
+
+/* ─── PAGE BODY ──────────────────────────────── */
+.page-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+/* ─── SIDEBAR ────────────────────────────────── */
+.sidebar {
+  width: 270px; flex-shrink: 0;
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  overflow-y: auto; padding: 22px 18px 20px;
+}
+
+.score-wrap { text-align: center; padding: 16px 0 14px; }
+.score-ring { position: relative; width: 116px; height: 116px; margin: 0 auto 10px; }
+.score-ring svg { width: 116px; height: 116px; transform: rotate(-90deg); }
+.ring-bg   { fill: none; stroke: rgba(255,255,255,.1); stroke-width: 9; }
+.ring-arc  { fill: none; stroke-width: 9; stroke-linecap: round;
+             stroke-dasharray: 313; stroke-dashoffset: 0;
+             transition: stroke-dashoffset .5s ease, stroke .4s ease; }
+.score-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.score-num  { font-family: var(--mono); font-size: 32px; font-weight: 700; color: #fff; line-height: 1; }
+.score-denom { font-size: 10px; color: rgba(255,255,255,.38); margin-top: 1px; letter-spacing: .06em; }
+.score-grade { font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; margin-bottom: 2px; }
+.score-hint  { font-size: 10px; color: rgba(255,255,255,.4); }
+
+.sb-section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: .15em;
+  text-transform: uppercase; color: rgba(255,255,255,.3);
+  margin: 16px 0 7px;
+}
+.chip-list { display: flex; flex-direction: column; gap: 5px; }
+.sb-chip {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 7px; padding: 6px 10px;
+  font-size: 11px; color: rgba(255,255,255,.55);
+  transition: all .2s;
+}
+.sb-chip.pass  { border-color: rgba(74,222,128,.28); color: rgba(255,255,255,.8); }
+.sb-chip.pass .cp { color: #4ade80; }
+.sb-chip.fail  { border-color: rgba(248,113,113,.28); }
+.sb-chip.fail .cp { color: #f87171; }
+.sb-chip.na-c  { border-color: rgba(251,191,36,.28); }
+.sb-chip.na-c .cp { color: #fbbf24; }
+.cp { font-family: var(--mono); font-size: 10px; font-weight: 700; }
+
+.sb-actions { margin-top: auto; padding-top: 18px; display: flex; flex-direction: column; gap: 7px; }
+.btn-sb-submit {
+  width: 100%; padding: 11px;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  border: none; border-radius: 8px;
+  color: #fff; font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s; display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-sb-submit:hover { opacity: .84; }
+.btn-sb-submit:disabled { opacity: .38; cursor: not-allowed; }
+.btn-sb-reset {
+  width: 100%; padding: 9px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px; color: rgba(255,255,255,.5);
+  font-family: var(--font); font-size: 12px;
+  cursor: pointer; transition: all .2s;
+}
+.btn-sb-reset:hover { background: rgba(255,255,255,.11); color: #fff; }
+
+/* ─── MAIN ───────────────────────────────────── */
+.main { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+.page-heading {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border); gap: 14px;
+}
+.ph-text h1 { font-size: 18px; font-weight: 700; color: var(--navy); }
+.ph-text h1 em { font-style: normal; color: var(--acc); }
+.ph-text p  { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.btn-top {
+  flex-shrink: 0; padding: 9px 20px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  color: #fff; font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s; display: flex; align-items: center; gap: 6px;
+}
+.btn-top:hover { opacity: .85; }
+
+.config-banner {
+  background: #fffbeb; border: 1px solid #fcd34d;
+  border-radius: 8px; padding: 9px 13px;
+  font-size: 12px; color: #92400e;
+  margin-bottom: 16px; display: none;
+}
+.config-banner.show { display: block; }
+
+/* ─── SECTIONS ───────────────────────────────── */
+.section {
+  background: var(--card); border: 1px solid var(--border-soft);
+  border-radius: var(--r); margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(18,38,110,.04); overflow: hidden;
+}
+.sec-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 15px; background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
+}
+.sec-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--navy); }
+.sec-icon  { font-size: 15px; }
+.sec-pts   { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--yes); }
+.sec-pts.z { color: var(--no); }
+.sec-body  { padding: 13px 15px; }
+
+/* ─── FIELDS ─────────────────────────────────── */
+.field { margin-bottom: 13px; }
+.field:last-child { margin-bottom: 0; }
+label {
+  display: block; font-size: 10px; font-weight: 700;
+  color: var(--muted); margin-bottom: 5px;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+input[type=text], input[type=url], input[type=date], select, textarea {
+  width: 100%; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 7px;
+  color: var(--text); font-family: var(--font); font-size: 13px;
+  padding: 8px 11px; outline: none;
+  transition: border-color .2s, box-shadow .2s; appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--blue-lt);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+textarea { resize: vertical; min-height: 62px; }
+select option { background: #fff; color: var(--text); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+/* ─── YES/NO ─────────────────────────────────── */
+.yn-group {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px;
+  background: var(--surface); border: 1px solid var(--border-soft);
+  border-radius: 8px; margin-bottom: 6px;
+  transition: border-color .2s, background .2s;
+}
+.yn-group:last-child { margin-bottom: 0; }
+.yn-group.ay { border-color: rgba(22,163,74,.35); background: rgba(22,163,74,.04); }
+.yn-group.an { border-color: rgba(220,38,38,.35);  background: rgba(220,38,38,.04); }
+.yn-group.aa { border-color: rgba(217,119,6,.35);  background: rgba(217,119,6,.04); }
+.yn-key  { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-right: 9px; flex-shrink: 0; }
+.yn-lbl  { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+.yn-btns { display: flex; gap: 5px; }
+.yn-btn {
+  border: 1px solid var(--border); background: var(--card);
+  border-radius: 6px; padding: 4px 13px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  color: var(--muted); font-family: var(--font); transition: all .15s;
+}
+.yn-btn:hover { border-color: var(--navy); color: var(--navy); }
+.yn-btn.yes.active { background: rgba(22,163,74,.09); border-color: var(--yes); color: var(--yes); }
+.yn-btn.no.active  { background: rgba(220,38,38,.09); border-color: var(--no);  color: var(--no); }
+.yn-btn.na.active  { background: rgba(217,119,6,.09); border-color: var(--na);  color: var(--na); }
+
+.na-notice {
+  font-size: 11px; color: var(--na);
+  background: rgba(217,119,6,.06); border: 1px solid rgba(217,119,6,.2);
+  border-radius: 6px; padding: 5px 10px; margin-top: 6px; display: none;
+}
+.na-notice.show { display: block; }
+
+/* ─── BOTTOM ACTIONS ─────────────────────────── */
+.bottom-wrap { display: flex; gap: 9px; margin-top: 18px; flex-wrap: wrap; }
+.btn-submit {
+  flex: 1; padding: 12px 18px; border: none; border-radius: 9px;
+  background: linear-gradient(135deg, var(--acc), var(--acc2));
+  color: #fff; font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: opacity .2s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-submit:hover   { opacity: .86; }
+.btn-submit:disabled { opacity: .38; cursor: not-allowed; }
+.btn-reset {
+  padding: 12px 17px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 9px;
+  color: var(--muted); font-family: var(--font); font-size: 12px;
+  cursor: pointer; transition: all .2s;
+}
+.btn-reset:hover { border-color: var(--navy); color: var(--navy); }
+
+/* ─── TOAST ──────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 22px; left: 50%;
+  transform: translateX(-50%) translateY(90px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 18px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 28px rgba(18,38,110,.13);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  z-index: 300; min-width: 230px; text-align: center;
+}
+.toast.show    { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--yes); color: var(--yes); }
+.toast.error   { border-color: var(--no);  color: var(--no); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-badge">⬡</div>
+    <div>
+      <div class="hdr-name">HOF · Compliance Audit</div>
+      <div class="hdr-sub">CRM Quality Control</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span class="hpill global">🌐 GLOBAL TEAM</span>
+    <span class="hpill live">● LIVE</span>
+    <button class="btn-hdr" onclick="submitAudit()">⬆ Submit Audit</button>
+  </div>
+</header>
+
+<div class="page-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="score-wrap">
+      <div class="score-ring">
+        <svg viewBox="0 0 116 116">
+          <circle class="ring-bg"  cx="58" cy="58" r="49.8"/>
+          <circle class="ring-arc" cx="58" cy="58" r="49.8" id="ring-arc"/>
+        </svg>
+        <div class="score-inner">
+          <span class="score-num" id="total-score">100</span>
+          <span class="score-denom">/ 100</span>
+        </div>
+      </div>
+      <div class="score-grade" id="score-grade" style="color:#4ade80;">PERFECT</div>
+      <div class="score-hint"  id="score-hint">All criteria passing</div>
+    </div>
+
+    <div class="sb-section-label">Score Breakdown</div>
+    <div class="chip-list">
+      <div class="sb-chip pass" data-key="dealStage"><span>Deal Stage</span><span class="cp" id="cp-dealStage">20/20</span></div>
+      <div class="sb-chip pass" data-key="pipeline"><span>Pipeline</span><span class="cp" id="cp-pipeline">20/20</span></div>
+      <div class="sb-chip pass" data-key="notes"><span>Notes</span><span class="cp" id="cp-notes">10/10</span></div>
+      <div class="sb-chip pass" data-key="whatsapp"><span>WA / Email</span><span class="cp" id="cp-whatsapp">10/10</span></div>
+      <div class="sb-chip pass" data-key="closeDate"><span>Close Date</span><span class="cp" id="cp-closeDate">10/10</span></div>
+      <div class="sb-chip pass" data-key="timeline"><span>Timeline</span><span class="cp" id="cp-timeline">10/10</span></div>
+      <div class="sb-chip pass" data-key="task"><span>Follow-up Task</span><span class="cp" id="cp-task">10/10</span></div>
+      <div class="sb-chip pass" data-key="dealLost"><span>Deal Lost</span><span class="cp" id="cp-dealLost">10/10</span></div>
+    </div>
+
+    <div class="sb-actions">
+      <button class="btn-sb-submit" id="submitBtn" onclick="submitAudit()">⬆ Submit to Sheet</button>
+      <button class="btn-sb-reset" onclick="resetForm()">↺ Reset Form</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="page-heading">
+      <div class="ph-text">
+        <h1>CRM <em>Quality Audit</em> — Global Team</h1>
+        <p>Mark NO for any criterion to deduct points from the live score on the left.</p>
+      </div>
+      <button class="btn-top" onclick="submitAudit()">⬆ Submit Audit to Sheet</button>
+    </div>
+
+    <div class="config-banner" id="config-banner">⚠ Apps Script URL not configured.</div>
+
+    <!-- CASE INFO -->
+    <div class="section">
+      <div class="sec-hdr"><div class="sec-title"><span class="sec-icon">◈</span> Case Information</div></div>
+      <div class="sec-body">
+        <div class="row2">
+          <div class="field">
+            <label>Consultant Name *</label>
+            <select id="consultantName" required>
+              <option value="">— Select Consultant —</option>
+              <option>Muizza Shahrukh</option><option>Abdul Rehman</option>
+              <option>Muhammad Sultan</option><option>Rabbiya Mohsin</option>
+              <option>Muhammad Diean</option><option>Muhammad Shahzad Fiaz</option>
+              <option>Ayesha Zahid</option><option>Syed Hussain Ali Haris</option>
+              <option>Ahmad Ali</option><option>Ali Raza Qureshi</option>
+              <option>Mishal Naseem</option><option>Hamza Manzoor</option>
+              <option>Fahad Waseem</option><option>Atika Zainab</option>
+              <option>Fatima Zahid</option><option>Tuba</option>
+              <option>Muhammad Hanzla</option><option>Muhammad Awaad bin Imran</option>
+              <option>Badar Saeed</option><option>Zahid Muneer</option><option>Aqsa Fareed</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Auditor Name *</label>
+            <select id="auditorName" required>
+              <option value="">— Select Auditor —</option>
+              <option>Misbah</option><option>Momina</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Deal Stage (Current) *</label>
+            <select id="dealStageVal" required>
+              <option value="">— Select Stage —</option>
+              <option>New</option><option>Qualified</option><option>CCL Sent</option>
+              <option>Expected Sales</option><option>Postpone (No Specific Date)</option>
+              <option>Deal Lost</option><option>Follow-up</option><option>Contract Signed</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Pipeline *</label>
+            <select id="pipelineVal" required>
+              <option value="">— Select Pipeline —</option>
+              <option>Canada &amp; AUS</option><option>Canada</option><option>Australia</option>
+              <option>UK</option><option>Germany</option><option>USA NIW</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Case Link (HubSpot URL) *</label>
+          <input type="url" id="caseLink" placeholder="https://app.hubspot.com/contacts/..."/>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Audit Date</label><input type="date" id="auditDate"/></div>
+          <div class="field"><label>Comments / Observations</label><input type="text" id="comments" placeholder="Optional notes..."/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. DEAL STAGE -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title"><span class="sec-icon">🏷️</span> Correct Deal Stage</div>
+        <div class="sec-pts" id="pts-dealStage">20 / 20</div>
+      </div>
+      <div class="sec-body">
+        <div class="yn-group">
+          <span class="yn-key">A</span>
+          <span class="yn-lbl">Deal stage matches the actual progress of this case (per SOP)</span>
+          <div class="yn-btns">
+            <button class="yn-btn yes" data-field="correctDealStage" data-val="YES">✓ Yes</button>
+            <button class="yn-btn no"  data-field="correctDealStage" data-val="NO">✗ No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. PIPELINE -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title"><span class="sec-icon">⚡</span> Correct Pipeline</div>
+        <div class="sec-pts" id="pts-pipeline">20 / 20</div>
+      </div>
+      <div class="sec-body">
+        <div class="yn-group">
+          <span class="yn-key">B</span>
+          <span class="yn-lbl">Deal is placed in the correct pipeline for this client</span>
+          <div class="yn-btns">
+            <button class="yn-btn yes" data-field="correctPipeline" data-val="YES">✓ Yes</button>
+            <button class="yn-btn no"  data-field="correctPipeline" data-val="NO">✗ No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. NOTES -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title"><span class="sec-icon">📝</span> Notes or Description</div>
+        <div class="sec-pts" id="pts-notes">10 / 10</div>
+      </div>
+      <div class="sec-body">
+        <div class="yn-group">
+          <span class="yn-key">C</span>
+          <span class="yn-lbl">Call description / notes logged accurately in HubSpot</span>
+          <div class="yn-btns">
+            <button class="yn-btn yes" data-field="notesDescription" data-val="YES">✓ Yes</button>
+            <button class="yn-btn no"  data-field="notesDescription" data-val="NO">✗ No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. WHATSAPP / EMAIL -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title"><span class="sec-icon">💬</span> WhatsApp / Email Logged</div>
+        <div class="sec-pts" id="pts-whatsapp">10 / 10</div>
+      </div>
+      <div class="sec-body">
+        <div class="yn-group">
+          <span class="yn-key">D</span>
+          <span class="yn-lbl">WhatsApp or email communication logged as a note in HubSpot</span>
+          <div class="yn-btns">
+            <button class="yn-btn yes" data-field="whatsappEmail" data-val="YES">✓ Yes</button>
+            <button class="yn-btn no"  data-field="whatsappEmail" data-val="NO">✗ No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. CLOSE DATE -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title"><span class="sec-icon">📅</span> Close Date</div>
+        <div class="sec-pts" id="pts-closeDate">10 / 10</div>
+      </div>
+      <div class="sec-body">
+        <div class="yn-group">
+          <span class="yn-key">E</span>
+          <span class="yn-lbl">Close date is set and reflects expected close timeframe</span>
+          <div class="yn-btns">
+            <button class="yn-btn yes" data-field="closeDate" data-val="YES">✓ Yes</button>
+            <button class="yn-btn no"  data-field="closeDate" data-val="NO">✗ No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. TIMELINE -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title"><span class="sec-icon">⏰</span> Postponed / Contact Back Timeline</div>
+        <div class="sec-pts" id="pts-timeline">10 / 10</div>
+      </div>
+      <div class="sec-body">
+        <div class="yn-group">
+          <span class="yn-key">F</span>
+          <span class="yn-lbl">A specific contact-back or postponement timeline has been set</span>
+          <div class="yn-btns">
+            <button class="yn-btn yes" data-field="timeline" data-val="YES">✓ Yes</button>
+            <button class="yn-btn no"  data-field="timeline" data-val="NO">✗ No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. FOLLOW-UP TASK -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title"><span class="sec-icon">✅</span> Follow-up Task (2 days)</div>
+        <div class="sec-pts" id="pts-task">10 / 10</div>
+      </div>
+      <div class="sec-body">
+        <div class="yn-group">
+          <span class="yn-key">G</span>
+          <span class="yn-lbl">Follow-up task created within 2 days for this deal</span>
+          <div class="yn-btns">
+            <button class="yn-btn yes" data-field="followupTask" data-val="YES">✓ Yes</button>
+            <button class="yn-btn no"  data-field="followupTask" data-val="NO">✗ No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. DEAL LOST -->
+    <div class="section">
+      <div class="sec-hdr">
+        <div class="sec-title"><span class="sec-icon">💀</span> Deal Lost Reason</div>
+        <div class="sec-pts" id="pts-dealLost">10 / 10</div>
+      </div>
+      <div class="sec-body">
+        <div class="yn-group">
+          <span class="yn-key">H</span>
+          <span class="yn-lbl">Deal lost reason is documented (select N/A if deal is not lost)</span>
+          <div class="yn-btns">
+            <button class="yn-btn yes" data-field="dealLostReason" data-val="YES">✓ Yes</button>
+            <button class="yn-btn no"  data-field="dealLostReason" data-val="NO">✗ No</button>
+            <button class="yn-btn na"  data-field="dealLostReason" data-val="N/A">— N/A</button>
+          </div>
+        </div>
+        <div class="na-notice" id="na-notice-dealLostReason">N/A selected — full 10 pts awarded.</div>
+      </div>
+    </div>
+
+    <div class="bottom-wrap">
+      <button class="btn-reset" onclick="resetForm()">↺ Reset</button>
+      <button class="btn-submit" onclick="submitAudit()">⬆ Submit Audit to Sheet</button>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsMacix1bNGCb_neNHzOdollK-GJdcGqJDZOom7dbmTMRuXN9DKigrI6ewqiqaNCfe/exec";
+const TEAM = "GLOBAL";
+
+const answers = { correctDealStage:null, correctPipeline:null, notesDescription:null,
+  whatsappEmail:null, closeDate:null, timeline:null, followupTask:null, dealLostReason:null };
+
+const WEIGHTS = { correctDealStage:20, correctPipeline:20, notesDescription:10,
+  whatsappEmail:10, closeDate:10, timeline:10, followupTask:10, dealLostReason:10 };
+
+const KEY_MAP = { correctDealStage:'dealStage', correctPipeline:'pipeline',
+  notesDescription:'notes', whatsappEmail:'whatsapp', closeDate:'closeDate',
+  timeline:'timeline', followupTask:'task', dealLostReason:'dealLost' };
+
+const CIRC = 313;
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('auditDate').value = new Date().toISOString().split('T')[0];
+  if (APPS_SCRIPT_URL === '') document.getElementById('config-banner').classList.add('show');
+  document.querySelectorAll('.yn-btn').forEach(b => b.addEventListener('click', () => handleYN(b)));
+  refreshScore();
+});
+
+function handleYN(btn) {
+  const field = btn.dataset.field, val = btn.dataset.val;
+  answers[field] = val;
+  const group = btn.closest('.yn-group');
+  group.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  group.classList.remove('ay','an','aa');
+  if (val==='YES') group.classList.add('ay');
+  if (val==='NO')  group.classList.add('an');
+  if (val==='N/A') group.classList.add('aa');
+  if (field==='dealLostReason')
+    document.getElementById('na-notice-dealLostReason').classList.toggle('show', val==='N/A');
+  refreshScore();
+}
+
+function calcScore() {
+  let total = 0; const bd = {};
+  for (const [k, w] of Object.entries(WEIGHTS)) {
+    const pts = answers[k]==='NO' ? 0 : w;
+    bd[k] = pts; total += pts;
+  }
+  return { total, bd };
+}
+
+function refreshScore() {
+  const { total, bd } = calcScore();
+  document.getElementById('total-score').textContent = total;
+  const arc = document.getElementById('ring-arc');
+  arc.style.strokeDashoffset = CIRC - (total/100)*CIRC;
+  const col = total>=85?'#4ade80':total>=60?'#fbbf24':'#f87171';
+  arc.style.stroke = col;
+  const g = document.getElementById('score-grade'), h = document.getElementById('score-hint');
+  if (total===100){ g.style.color='#4ade80';g.textContent='PERFECT';h.textContent='All criteria passing'; }
+  else if(total>=85){ g.style.color='#4ade80';g.textContent='COMPLIANT';h.textContent='Above 85% target'; }
+  else if(total>=60){ g.style.color='#fbbf24';g.textContent='NEEDS WORK';h.textContent='Below 85% target'; }
+  else { g.style.color='#f87171';g.textContent='CRITICAL';h.textContent='Significant gaps found'; }
+  for (const [field, pts] of Object.entries(bd)) {
+    const max=WEIGHTS[field], ck=KEY_MAP[field], answered=answers[field]!==null;
+    const pEl=document.getElementById(`pts-${ck}`);
+    if(pEl){ pEl.textContent=`${pts} / ${max}`; pEl.className='sec-pts'+(pts===0?' z':''); }
+    const chip=document.querySelector(`.sb-chip[data-key="${ck}"]`);
+    const cpEl=document.getElementById(`cp-${ck}`);
+    if(chip&&cpEl){
+      cpEl.textContent=`${pts}/${max}`;
+      chip.className='sb-chip '+(!answered?'pass':answers[field]==='N/A'?'na-c':pts===max?'pass':'fail');
+    }
+  }
+}
+
+async function submitAudit() {
+  const c=document.getElementById('consultantName').value,
+        a=document.getElementById('auditorName').value,
+        l=document.getElementById('caseLink').value,
+        d=document.getElementById('dealStageVal').value;
+  if(!c||!a||!l||!d){ showToast('Fill in all required case fields.','error'); return; }
+  if(APPS_SCRIPT_URL===''){ showToast('Apps Script URL not configured.','error'); return; }
+  const {total}=calcScore();
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='⟳ Submitting…';
+  const payload={ consultantName:c, caseLink:l,
+    auditDate:document.getElementById('auditDate').value, dealStage:d,
+    pipeline:document.getElementById('pipelineVal').value,
+    correctDealStage:answers.correctDealStage||'', correctPipeline:answers.correctPipeline||'',
+    notesDescription:answers.notesDescription||'', whatsappEmail:answers.whatsappEmail||'',
+    closeDate:answers.closeDate||'', timeline:answers.timeline||'',
+    followupTask:answers.followupTask||'', dealLostReason:answers.dealLostReason||'',
+    score:total, comments:document.getElementById('comments').value, auditorName:a, team:TEAM };
+  try {
+    // Removed 'no-cors' and changed Content-Type to 'text/plain' to avoid CORS preflight
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    showToast('✓ Audit submitted to Google Sheet!', 'success');
+    setTimeout(() => resetForm(), 2000);
+  } catch(e) { 
+    showToast('Submission failed. Check URL or network.', 'error'); 
+    console.error(e);
+  }
+  finally { 
+    btn.disabled = false; 
+    btn.textContent = '⬆ Submit to Sheet'; 
+  }
+    setTimeout(()=>resetForm(),2000);
+  } catch(e){ showToast('Submission failed. Check URL or network.','error'); }
+  finally { btn.disabled=false; btn.textContent='⬆ Submit to Sheet'; }
+}
+
+function resetForm() {
+  for(const k of Object.keys(answers)) answers[k]=null;
+  document.querySelectorAll('.yn-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.yn-group').forEach(g=>g.classList.remove('ay','an','aa'));
+  document.querySelectorAll('.na-notice').forEach(n=>n.classList.remove('show'));
+  ['consultantName','auditorName','dealStageVal','pipelineVal','caseLink','comments']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('auditDate').value=new Date().toISOString().split('T')[0];
+  refreshScore();
+}
+
+function showToast(msg,type='success') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>
