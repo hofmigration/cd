@@ -13,7 +13,7 @@
   --navy-mid:    #1e3a8a;
   --blue:        #2563eb;
   --blue-lt:     #3b82f6;
-  --acc:         #2563eb;   /* Global = blue accent */
+  --acc:         #2563eb;
   --acc2:        #7c3aed;
   --bg:          #eef3ff;
   --surface:     #f4f7ff;
@@ -130,6 +130,27 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); disp
   cursor: pointer; transition: all .2s;
 }
 .btn-sb-reset:hover { background: rgba(255,255,255,.11); color: #fff; }
+.btn-autofail {
+  width: 100%; padding: 11px;
+  background: rgba(220,38,38,.12); border: 1px solid rgba(220,38,38,.4);
+  border-radius: 8px; color: #f87171;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-autofail:hover { background: rgba(220,38,38,.22); border-color: #f87171; color: #fca5a5; }
+.btn-autofail.active {
+  background: rgba(220,38,38,.28); border-color: #ef4444; color: #fff;
+  box-shadow: 0 0 0 2px rgba(220,38,38,.35);
+}
+.autofail-notice {
+  background: rgba(220,38,38,.1); border: 1px solid rgba(220,38,38,.35);
+  border-radius: 7px; padding: 7px 10px;
+  font-size: 10px; color: #f87171; text-align: center;
+  font-weight: 600; letter-spacing: .04em;
+  display: none;
+}
+.autofail-notice.show { display: block; }
 
 /* ─── MAIN ───────────────────────────────────── */
 .main { flex: 1; overflow-y: auto; padding: 24px 28px; }
@@ -316,6 +337,8 @@ select option { background: #fff; color: var(--text); }
     </div>
 
     <div class="sb-actions">
+      <button class="btn-autofail" id="autofailBtn" onclick="triggerAutofail()">⚠ Autofail</button>
+      <div class="autofail-notice" id="autofailNotice">⛔ AUTOFAIL ACTIVE — Score forced to 0</div>
       <button class="btn-sb-submit" id="submitBtn" onclick="submitAudit()">⬆ Submit to Sheet</button>
       <button class="btn-sb-reset" onclick="resetForm()">↺ Reset Form</button>
     </div>
@@ -554,6 +577,8 @@ const TEAM = "GLOBAL";
 const answers = { correctDealStage:null, correctPipeline:null, notesDescription:null,
   whatsappEmail:null, closeDate:null, timeline:null, followupTask:null, dealLostReason:null };
 
+let autofailActive = false;
+
 const WEIGHTS = { correctDealStage:20, correctPipeline:20, notesDescription:10,
   whatsappEmail:10, closeDate:10, timeline:10, followupTask:10, dealLostReason:10 };
 
@@ -585,7 +610,49 @@ function handleYN(btn) {
   refreshScore();
 }
 
+function triggerAutofail() {
+  autofailActive = !autofailActive;
+  const btn = document.getElementById('autofailBtn');
+  const notice = document.getElementById('autofailNotice');
+  if (autofailActive) {
+    btn.classList.add('active');
+    btn.textContent = '✕ Cancel Autofail';
+    notice.classList.add('show');
+    document.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.yn-group').forEach(g => g.classList.remove('ay','an','aa'));
+    document.querySelectorAll('.yn-group').forEach(g => g.classList.add('an'));
+    document.querySelectorAll('.yn-btn.no').forEach(b => b.classList.add('active'));
+    document.querySelectorAll('.na-notice').forEach(n => n.classList.remove('show'));
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '⚠ Autofail';
+    notice.classList.remove('show');
+    document.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.yn-group').forEach(g => g.classList.remove('ay','an','aa'));
+    for (const [field, val] of Object.entries(answers)) {
+      if (val) {
+        const btn2 = document.querySelector(`.yn-btn[data-field="${field}"][data-val="${val}"]`);
+        if (btn2) {
+          btn2.classList.add('active');
+          const group = btn2.closest('.yn-group');
+          if (val==='YES') group.classList.add('ay');
+          if (val==='NO')  group.classList.add('an');
+          if (val==='N/A') group.classList.add('aa');
+        }
+      }
+    }
+    if (answers.dealLostReason === 'N/A')
+      document.getElementById('na-notice-dealLostReason').classList.add('show');
+  }
+  refreshScore();
+}
+
 function calcScore() {
+  if (autofailActive) {
+    const bd = {};
+    for (const k of Object.keys(WEIGHTS)) bd[k] = 0;
+    return { total: 0, bd };
+  }
   let total = 0; const bd = {};
   for (const [k, w] of Object.entries(WEIGHTS)) {
     const pts = answers[k]==='NO' ? 0 : w;
@@ -607,14 +674,14 @@ function refreshScore() {
   else if(total>=60){ g.style.color='#fbbf24';g.textContent='NEEDS WORK';h.textContent='Below 85% target'; }
   else { g.style.color='#f87171';g.textContent='CRITICAL';h.textContent='Significant gaps found'; }
   for (const [field, pts] of Object.entries(bd)) {
-    const max=WEIGHTS[field], ck=KEY_MAP[field], answered=answers[field]!==null;
+    const max=WEIGHTS[field], ck=KEY_MAP[field], answered=autofailActive||answers[field]!==null;
     const pEl=document.getElementById(`pts-${ck}`);
     if(pEl){ pEl.textContent=`${pts} / ${max}`; pEl.className='sec-pts'+(pts===0?' z':''); }
     const chip=document.querySelector(`.sb-chip[data-key="${ck}"]`);
     const cpEl=document.getElementById(`cp-${ck}`);
     if(chip&&cpEl){
       cpEl.textContent=`${pts}/${max}`;
-      chip.className='sb-chip '+(!answered?'pass':answers[field]==='N/A'?'na-c':pts===max?'pass':'fail');
+      chip.className='sb-chip '+(autofailActive?'fail':!answered?'pass':answers[field]==='N/A'?'na-c':pts===max?'pass':'fail');
     }
   }
 }
@@ -627,15 +694,18 @@ async function submitAudit() {
   if(!c||!a||!l||!d){ showToast('Fill in all required case fields.','error'); return; }
   if(APPS_SCRIPT_URL===''){ showToast('Apps Script URL not configured.','error'); return; }
   const {total}=calcScore();
+  const effectiveAnswers = autofailActive
+    ? Object.fromEntries(Object.keys(answers).map(k => [k, 'NO']))
+    : answers;
   const btn=document.getElementById('submitBtn');
   btn.disabled=true; btn.textContent='⟳ Submitting…';
   const payload={ consultantName:c, caseLink:l,
     auditDate:document.getElementById('auditDate').value, dealStage:d,
     pipeline:document.getElementById('pipelineVal').value,
-    correctDealStage:answers.correctDealStage||'', correctPipeline:answers.correctPipeline||'',
-    notesDescription:answers.notesDescription||'', whatsappEmail:answers.whatsappEmail||'',
-    closeDate:answers.closeDate||'', timeline:answers.timeline||'',
-    followupTask:answers.followupTask||'', dealLostReason:answers.dealLostReason||'',
+    correctDealStage:effectiveAnswers.correctDealStage||'', correctPipeline:effectiveAnswers.correctPipeline||'',
+    notesDescription:effectiveAnswers.notesDescription||'', whatsappEmail:effectiveAnswers.whatsappEmail||'',
+    closeDate:effectiveAnswers.closeDate||'', timeline:effectiveAnswers.timeline||'',
+    followupTask:effectiveAnswers.followupTask||'', dealLostReason:effectiveAnswers.dealLostReason||'',
     score:total, comments:document.getElementById('comments').value, auditorName:a, team:TEAM };
   try {
     const res = await fetch(APPS_SCRIPT_URL,{method:'POST',
@@ -649,6 +719,10 @@ async function submitAudit() {
 }
 
 function resetForm() {
+  autofailActive = false;
+  const afBtn = document.getElementById('autofailBtn');
+  if (afBtn) { afBtn.classList.remove('active'); afBtn.textContent = '⚠ Autofail'; }
+  document.getElementById('autofailNotice').classList.remove('show');
   for(const k of Object.keys(answers)) answers[k]=null;
   document.querySelectorAll('.yn-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.yn-group').forEach(g=>g.classList.remove('ay','an','aa'));
