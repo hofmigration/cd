@@ -244,6 +244,17 @@ select option { background: #fff; color: var(--text); }
 .yn-btn.yes.active { background: rgba(22,163,74,.09); border-color: var(--yes); color: var(--yes); }
 .yn-btn.no.active  { background: rgba(220,38,38,.09); border-color: var(--no);  color: var(--no); }
 .yn-btn.na.active  { background: rgba(217,119,6,.09); border-color: var(--na);  color: var(--na); }
+.yn-btn.af {
+  border-color: rgba(220,38,38,.35); color: rgba(220,38,38,.7);
+  font-size: 10px; padding: 4px 9px; margin-left: 3px;
+}
+.yn-btn.af:hover { border-color: #dc2626; color: #dc2626; background: rgba(220,38,38,.07); }
+.yn-btn.af.active {
+  background: rgba(220,38,38,.18); border-color: #ef4444; color: #ef4444;
+  font-weight: 700; box-shadow: 0 0 0 2px rgba(220,38,38,.25);
+}
+.yn-group.aaf { border-color: rgba(220,38,38,.6) !important; background: rgba(220,38,38,.06) !important; }
+.yn-group.aaf .yn-lbl { color: #dc2626; }
 
 .na-notice {
   font-size: 11px; color: var(--na);
@@ -337,7 +348,6 @@ select option { background: #fff; color: var(--text); }
     </div>
 
     <div class="sb-actions">
-      <button class="btn-autofail" id="autofailBtn" onclick="triggerAutofail()">⚠ Autofail</button>
       <div class="autofail-notice" id="autofailNotice">⛔ AUTOFAIL ACTIVE — Score forced to 0</div>
       <button class="btn-sb-submit" id="submitBtn" onclick="submitAudit()">⬆ Submit to Sheet</button>
       <button class="btn-sb-reset" onclick="resetForm()">↺ Reset Form</button>
@@ -430,7 +440,7 @@ select option { background: #fff; color: var(--text); }
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="correctDealStage" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="correctDealStage" data-val="NO">✗ No</button>
-          </div>
+          <button class="yn-btn af" data-field="correctDealStage" onclick="handleAutofail(this)">⚠ AF</button></div>
         </div>
       </div>
     </div>
@@ -448,7 +458,7 @@ select option { background: #fff; color: var(--text); }
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="correctPipeline" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="correctPipeline" data-val="NO">✗ No</button>
-          </div>
+          <button class="yn-btn af" data-field="correctPipeline" onclick="handleAutofail(this)">⚠ AF</button></div>
         </div>
       </div>
     </div>
@@ -466,7 +476,7 @@ select option { background: #fff; color: var(--text); }
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="notesDescription" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="notesDescription" data-val="NO">✗ No</button>
-          </div>
+          <button class="yn-btn af" data-field="notesDescription" onclick="handleAutofail(this)">⚠ AF</button></div>
         </div>
       </div>
     </div>
@@ -484,7 +494,7 @@ select option { background: #fff; color: var(--text); }
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="whatsappEmail" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="whatsappEmail" data-val="NO">✗ No</button>
-          </div>
+          <button class="yn-btn af" data-field="whatsappEmail" onclick="handleAutofail(this)">⚠ AF</button></div>
         </div>
       </div>
     </div>
@@ -502,7 +512,7 @@ select option { background: #fff; color: var(--text); }
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="closeDate" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="closeDate" data-val="NO">✗ No</button>
-          </div>
+          <button class="yn-btn af" data-field="closeDate" onclick="handleAutofail(this)">⚠ AF</button></div>
         </div>
       </div>
     </div>
@@ -520,7 +530,7 @@ select option { background: #fff; color: var(--text); }
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="timeline" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="timeline" data-val="NO">✗ No</button>
-          </div>
+          <button class="yn-btn af" data-field="timeline" onclick="handleAutofail(this)">⚠ AF</button></div>
         </div>
       </div>
     </div>
@@ -538,7 +548,7 @@ select option { background: #fff; color: var(--text); }
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="followupTask" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="followupTask" data-val="NO">✗ No</button>
-          </div>
+          <button class="yn-btn af" data-field="followupTask" onclick="handleAutofail(this)">⚠ AF</button></div>
         </div>
       </div>
     </div>
@@ -557,7 +567,7 @@ select option { background: #fff; color: var(--text); }
             <button class="yn-btn yes" data-field="dealLostReason" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="dealLostReason" data-val="NO">✗ No</button>
             <button class="yn-btn na"  data-field="dealLostReason" data-val="N/A">— N/A</button>
-          </div>
+          <button class="yn-btn af" data-field="dealLostReason" onclick="handleAutofail(this)">⚠ AF</button></div>
         </div>
         <div class="na-notice" id="na-notice-dealLostReason">N/A selected — full 10 pts awarded.</div>
       </div>
@@ -579,6 +589,7 @@ const TEAM = "GLOBAL";
 const answers = { correctDealStage:null, correctPipeline:null, notesDescription:null,
   whatsappEmail:null, closeDate:null, timeline:null, followupTask:null, dealLostReason:null };
 
+const autofails = {};
 let autofailActive = false;
 
 const WEIGHTS = { correctDealStage:20, correctPipeline:20, notesDescription:10,
@@ -593,7 +604,7 @@ const CIRC = 313;
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('auditDate').value = new Date().toISOString().split('T')[0];
   if (APPS_SCRIPT_URL === '') document.getElementById('config-banner').classList.add('show');
-  document.querySelectorAll('.yn-btn').forEach(b => b.addEventListener('click', () => handleYN(b)));
+  document.querySelectorAll('.yn-btn:not(.af)').forEach(b => b.addEventListener('click', () => handleYN(b)));
   refreshScore();
 });
 
@@ -601,56 +612,44 @@ function handleYN(btn) {
   const field = btn.dataset.field, val = btn.dataset.val;
   answers[field] = val;
   const group = btn.closest('.yn-group');
-  group.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+  group.querySelectorAll('.yn-btn:not(.af)').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  group.classList.remove('ay','an','aa');
+  group.classList.remove('ay','an','aa','aaf');
   if (val==='YES') group.classList.add('ay');
   if (val==='NO')  group.classList.add('an');
   if (val==='N/A') group.classList.add('aa');
+  if (autofails[field]) group.classList.add('aaf');
   if (field==='dealLostReason')
     document.getElementById('na-notice-dealLostReason').classList.toggle('show', val==='N/A');
   refreshScore();
 }
 
-function triggerAutofail() {
-  autofailActive = !autofailActive;
-  const btn = document.getElementById('autofailBtn');
-  const notice = document.getElementById('autofailNotice');
-  if (autofailActive) {
-    btn.classList.add('active');
-    btn.textContent = '✕ Cancel Autofail';
-    notice.classList.add('show');
-    document.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.yn-group').forEach(g => g.classList.remove('ay','an','aa'));
-    document.querySelectorAll('.yn-group').forEach(g => g.classList.add('an'));
-    document.querySelectorAll('.yn-btn.no').forEach(b => b.classList.add('active'));
-    document.querySelectorAll('.na-notice').forEach(n => n.classList.remove('show'));
-  } else {
+function handleAutofail(btn) {
+  const field = btn.dataset.field;
+  const group = btn.closest('.yn-group');
+  if (autofails[field]) {
+    delete autofails[field];
     btn.classList.remove('active');
-    btn.textContent = '⚠ Autofail';
-    notice.classList.remove('show');
-    document.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.yn-group').forEach(g => g.classList.remove('ay','an','aa'));
-    for (const [field, val] of Object.entries(answers)) {
-      if (val) {
-        const btn2 = document.querySelector(`.yn-btn[data-field="${field}"][data-val="${val}"]`);
-        if (btn2) {
-          btn2.classList.add('active');
-          const group = btn2.closest('.yn-group');
-          if (val==='YES') group.classList.add('ay');
-          if (val==='NO')  group.classList.add('an');
-          if (val==='N/A') group.classList.add('aa');
-        }
-      }
-    }
-    if (answers.dealLostReason === 'N/A')
-      document.getElementById('na-notice-dealLostReason').classList.add('show');
+    group.classList.remove('aaf');
+    const ans = answers[field];
+    if (ans==='YES') group.classList.add('ay');
+    else if (ans==='NO') group.classList.add('an');
+    else if (ans==='N/A') group.classList.add('aa');
+  } else {
+    autofails[field] = true;
+    btn.classList.add('active');
+    group.classList.remove('ay','an','aa');
+    group.classList.add('aaf');
   }
+  autofailActive = Object.keys(autofails).length > 0;
+  document.getElementById('autofailNotice').classList.toggle('show', autofailActive);
   refreshScore();
 }
 
+
+
 function calcScore() {
-  if (autofailActive) {
+  if (Object.keys(autofails).length > 0) {
     const bd = {};
     for (const k of Object.keys(WEIGHTS)) bd[k] = 0;
     return { total: 0, bd };
@@ -671,19 +670,23 @@ function refreshScore() {
   const col = total>=85?'#4ade80':total>=60?'#fbbf24':'#f87171';
   arc.style.stroke = col;
   const g = document.getElementById('score-grade'), h = document.getElementById('score-hint');
-  if (total===100){ g.style.color='#4ade80';g.textContent='PERFECT';h.textContent='All criteria passing'; }
+  if (Object.keys(autofails).length > 0) {
+    g.style.color='#f87171'; g.textContent='AUTOFAIL'; h.textContent='Score forced to 0';
+  } else if (total===100){ g.style.color='#4ade80';g.textContent='PERFECT';h.textContent='All criteria passing'; }
   else if(total>=85){ g.style.color='#4ade80';g.textContent='COMPLIANT';h.textContent='Above 85% target'; }
   else if(total>=60){ g.style.color='#fbbf24';g.textContent='NEEDS WORK';h.textContent='Below 85% target'; }
   else { g.style.color='#f87171';g.textContent='CRITICAL';h.textContent='Significant gaps found'; }
   for (const [field, pts] of Object.entries(bd)) {
-    const max=WEIGHTS[field], ck=KEY_MAP[field], answered=autofailActive||answers[field]!==null;
+    const max=WEIGHTS[field], ck=KEY_MAP[field], answered=answers[field]!==null;
+    const isAF = autofails[field] !== undefined;
     const pEl=document.getElementById(`pts-${ck}`);
     if(pEl){ pEl.textContent=`${pts} / ${max}`; pEl.className='sec-pts'+(pts===0?' z':''); }
     const chip=document.querySelector(`.sb-chip[data-key="${ck}"]`);
     const cpEl=document.getElementById(`cp-${ck}`);
     if(chip&&cpEl){
       cpEl.textContent=`${pts}/${max}`;
-      chip.className='sb-chip '+(autofailActive?'fail':!answered?'pass':answers[field]==='N/A'?'na-c':pts===max?'pass':'fail');
+      if (isAF) chip.className='sb-chip fail';
+      else chip.className='sb-chip '+(!answered?'pass':answers[field]==='N/A'?'na-c':pts===max?'pass':'fail');
     }
   }
 }
@@ -696,19 +699,20 @@ async function submitAudit() {
   if(!c||!a||!l||!d){ showToast('Fill in all required case fields.','error'); return; }
   if(APPS_SCRIPT_URL===''){ showToast('Apps Script URL not configured.','error'); return; }
   const {total}=calcScore();
-  const effectiveAnswers = autofailActive
-    ? Object.fromEntries(Object.keys(answers).map(k => [k, 'NO']))
-    : answers;
+  const effectiveAnswers = {};
+  for (const k of Object.keys(answers)) {
+    effectiveAnswers[k] = autofails[k] ? 'Autofail' : (answers[k] || '');
+  }
   const btn=document.getElementById('submitBtn');
   btn.disabled=true; btn.textContent='⟳ Submitting…';
   const payload={ consultantName:c, caseLink:l,
     auditDate:document.getElementById('auditDate').value, dealStage:d,
     pipeline:document.getElementById('pipelineVal').value,
-    correctDealStage:effectiveAnswers.correctDealStage||'', correctPipeline:effectiveAnswers.correctPipeline||'',
-    notesDescription:effectiveAnswers.notesDescription||'', whatsappEmail:effectiveAnswers.whatsappEmail||'',
-    closeDate:effectiveAnswers.closeDate||'', timeline:effectiveAnswers.timeline||'',
-    followupTask:effectiveAnswers.followupTask||'', dealLostReason:effectiveAnswers.dealLostReason||'',
-    score:total, comments:document.getElementById('comments').value, auditorName:a, team:TEAM };
+    correctDealStage:effectiveAnswers.correctDealStage, correctPipeline:effectiveAnswers.correctPipeline,
+    notesDescription:effectiveAnswers.notesDescription, whatsappEmail:effectiveAnswers.whatsappEmail,
+    closeDate:effectiveAnswers.closeDate, timeline:effectiveAnswers.timeline,
+    followupTask:effectiveAnswers.followupTask, dealLostReason:effectiveAnswers.dealLostReason,
+    score: Object.keys(autofails).length > 0 ? 0 : total, comments:document.getElementById('comments').value, auditorName:a, team:TEAM };
   try {
     const res = await fetch(APPS_SCRIPT_URL,{method:'POST',
       headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
@@ -722,12 +726,11 @@ async function submitAudit() {
 
 function resetForm() {
   autofailActive = false;
-  const afBtn = document.getElementById('autofailBtn');
-  if (afBtn) { afBtn.classList.remove('active'); afBtn.textContent = '⚠ Autofail'; }
+  for (const k of Object.keys(autofails)) delete autofails[k];
   document.getElementById('autofailNotice').classList.remove('show');
   for(const k of Object.keys(answers)) answers[k]=null;
   document.querySelectorAll('.yn-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.yn-group').forEach(g=>g.classList.remove('ay','an','aa'));
+  document.querySelectorAll('.yn-group').forEach(g=>g.classList.remove('ay','an','aa','aaf'));
   document.querySelectorAll('.na-notice').forEach(n=>n.classList.remove('show'));
   ['consultantName','auditorName','dealStageVal','pipelineVal','caseLink','comments']
     .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
