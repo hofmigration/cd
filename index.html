@@ -670,7 +670,18 @@ window.addEventListener('DOMContentLoaded', () => {
   if (APPS_SCRIPT_URL === '') document.getElementById('config-banner').classList.add('show');
   document.querySelectorAll('.yn-btn:not(.af)').forEach(b => b.addEventListener('click', () => handleYN(b)));
   refreshScore();
+  warmupEndpoints();
 });
+
+// Pre-wake the Apps Script instances so the auditor's submit feels instant.
+// We use no-cors GET requests; we don't read the response — we just want Google's
+// servers to spin up the V8 isolate before it's actually needed.
+function warmupEndpoints() {
+  const urls = [APPS_SCRIPT_URL, DEAL_WASTED_URL].filter(Boolean);
+  urls.forEach(u => {
+    try { fetch(u, { method: 'GET', mode: 'no-cors' }).catch(() => {}); } catch (e) {}
+  });
+}
 
 function handleYN(btn) {
   const field = btn.dataset.field, val = btn.dataset.val;
@@ -753,7 +764,7 @@ function refreshScore() {
   }
 }
 
-async function submitAudit() {
+function submitAudit() {
   const c=document.getElementById('consultantName').value,
         a=document.getElementById('auditorName').value,
         l=document.getElementById('caseLink').value,
@@ -765,8 +776,6 @@ async function submitAudit() {
   for (const k of Object.keys(answers)) {
     effectiveAnswers[k] = autofails[k] ? 'Autofail' : (answers[k] || '');
   }
-  const btn=document.getElementById('submitBtn');
-  btn.disabled=true; btn.textContent='⟳ Submitting…';
   const payload={ consultantName:c, caseLink:l,
     auditDate:document.getElementById('auditDate').value, dealStage:d,
     pipeline:document.getElementById('pipelineVal').value,
@@ -775,15 +784,25 @@ async function submitAudit() {
     closeDate:effectiveAnswers.closeDate, timeline:effectiveAnswers.timeline,
     followupTask:effectiveAnswers.followupTask, dealLostReason:effectiveAnswers.dealLostReason,
     score: Object.keys(autofails).length > 0 ? 0 : total, comments:document.getElementById('comments').value, auditorName:a, team:TEAM };
-  try {
-    const res = await fetch(APPS_SCRIPT_URL,{method:'POST',
-      headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
-    const result = await res.json();
-    if(result.status!=='success') throw new Error(result.message||'Unknown error');
-    showToast('✓ Audit submitted to Google Sheet!','success');
-    setTimeout(()=>resetForm(),2000);
-  } catch(e){ showToast('Submission failed: '+e.message,'error'); }
-  finally { btn.disabled=false; btn.textContent='⬆ Submit to Sheet'; }
+
+  // OPTIMISTIC UI: show success and reset the form immediately so the auditor
+  // can move on. The fetch happens in the background; if it fails, an error
+  // toast is shown so the auditor knows to retry.
+  showToast('✓ Audit submitted to Google Sheet!','success');
+  resetForm();
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
+  })
+  .catch(e => {
+    showToast('Submission failed — please re-enter: ' + e.message, 'error');
+  });
 }
 
 /* ─── DEAL WASTED ─────────────────────────────── */
@@ -798,34 +817,30 @@ function closeDealWastedModal() {
   document.getElementById('dwModal').classList.remove('show');
 }
 
-async function submitDealWasted() {
+function submitDealWasted() {
   const link = document.getElementById('caseLink').value.trim();
   if (!link) { showToast('Enter the Case Link first.','error'); closeDealWastedModal(); return; }
   if (!DEAL_WASTED_URL) { showToast('Deal Wasted URL not configured.','error'); return; }
 
-  const cBtn = document.getElementById('dwConfirmBtn');
-  const sBtn = document.getElementById('dealWastedBtn');
-  cBtn.disabled = true; sBtn.disabled = true;
-  cBtn.textContent = '⟳ Submitting…';
-
   const payload = { dealLink: link, team: TEAM, sheet: 'Deal Wasted Global' };
 
-  try {
-    const res = await fetch(DEAL_WASTED_URL, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify(payload)
-    });
-    const result = await res.json();
+  // OPTIMISTIC UI: close modal + show success right away, then fire fetch
+  // in the background. If it fails, an error toast informs the auditor.
+  showToast('✓ Deal marked wasted!','success');
+  closeDealWastedModal();
+
+  fetch(DEAL_WASTED_URL, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(result => {
     if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
-    showToast('✓ Deal marked wasted!','success');
-    closeDealWastedModal();
-  } catch (e) {
-    showToast('Failed: ' + e.message, 'error');
-  } finally {
-    cBtn.disabled = false; sBtn.disabled = false;
-    cBtn.textContent = 'Mark Wasted';
-  }
+  })
+  .catch(e => {
+    showToast('Deal Wasted failed — please retry: ' + e.message, 'error');
+  });
 }
 
 function resetForm() {
