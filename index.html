@@ -164,6 +164,21 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); disp
 .btn-deal-wasted:hover { background: rgba(217,119,6,.25); border-color: #fbbf24; color: #fde68a; }
 .btn-deal-wasted:disabled { opacity: .5; cursor: not-allowed; }
 
+/* ─── GLOBAL AUTOFAIL TOGGLE ─────────────────── */
+.btn-autofail-toggle {
+  width: 100%; padding: 11px;
+  background: rgba(220,38,38,.12); border: 1px solid rgba(220,38,38,.45);
+  border-radius: 8px; color: #f87171;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-autofail-toggle:hover { background: rgba(220,38,38,.22); border-color: #f87171; color: #fca5a5; }
+.btn-autofail-toggle.active {
+  background: rgba(220,38,38,.32); border-color: #ef4444; color: #fff;
+  box-shadow: 0 0 0 2px rgba(220,38,38,.4);
+}
+
 /* ─── MAIN ───────────────────────────────────── */
 .main { flex: 1; overflow-y: auto; padding: 24px 28px; }
 
@@ -393,6 +408,7 @@ select option { background: #fff; color: var(--text); }
       <div class="autofail-notice" id="autofailNotice">⛔ AUTOFAIL ACTIVE — Score forced to 0</div>
       <button class="btn-sb-submit" id="submitBtn" onclick="submitAudit()">⬆ Submit to Sheet</button>
       <button class="btn-deal-wasted" id="dealWastedBtn" onclick="openDealWastedModal()">🗑 Mark Deal Wasted</button>
+      <button class="btn-autofail-toggle" id="autofailToggleBtn" onclick="toggleGlobalAutofail()">⚠ Autofail (Score = 0)</button>
       <button class="btn-sb-reset" onclick="resetForm()">↺ Reset Form</button>
     </div>
   </aside>
@@ -432,6 +448,8 @@ select option { background: #fff; color: var(--text); }
               <option>Raza Shahid</option><option>Khizar Khan Jadoon</option>
               <option>Faiq Bin Ansab</option><option>Amna Hameed Qureshi</option>
               <option>Muhammad Haseeb</option>
+              <option>Laraib</option><option>Muhammad Hasham Azhar</option>
+              <option>Ahmed Ali Malik</option><option>Laaiba Anum</option>
             </select>
           </div>
           <div class="field">
@@ -485,8 +503,7 @@ select option { background: #fff; color: var(--text); }
           <span class="yn-lbl">Deal stage matches the actual progress of this case (per SOP)</span>
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="correctDealStage" data-val="YES">✓ Yes</button>
-            <button class="yn-btn no"  data-field="correctDealStage" data-val="NO">✗ No</button>
-          <button class="yn-btn af" data-field="correctDealStage" onclick="handleAutofail(this)">⚠ AF</button></div>
+            <button class="yn-btn no"  data-field="correctDealStage" data-val="NO">✗ No</button></div>
         </div>
       </div>
     </div>
@@ -503,8 +520,7 @@ select option { background: #fff; color: var(--text); }
           <span class="yn-lbl">Deal is placed in the correct pipeline for this client</span>
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="correctPipeline" data-val="YES">✓ Yes</button>
-            <button class="yn-btn no"  data-field="correctPipeline" data-val="NO">✗ No</button>
-          <button class="yn-btn af" data-field="correctPipeline" onclick="handleAutofail(this)">⚠ AF</button></div>
+            <button class="yn-btn no"  data-field="correctPipeline" data-val="NO">✗ No</button></div>
         </div>
       </div>
     </div>
@@ -521,8 +537,7 @@ select option { background: #fff; color: var(--text); }
           <span class="yn-lbl">Call description / notes logged accurately in HubSpot</span>
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="notesDescription" data-val="YES">✓ Yes</button>
-            <button class="yn-btn no"  data-field="notesDescription" data-val="NO">✗ No</button>
-          <button class="yn-btn af" data-field="notesDescription" onclick="handleAutofail(this)">⚠ AF</button></div>
+            <button class="yn-btn no"  data-field="notesDescription" data-val="NO">✗ No</button></div>
         </div>
       </div>
     </div>
@@ -539,8 +554,7 @@ select option { background: #fff; color: var(--text); }
           <span class="yn-lbl">WhatsApp or email communication logged as a note in HubSpot</span>
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="whatsappEmail" data-val="YES">✓ Yes</button>
-            <button class="yn-btn no"  data-field="whatsappEmail" data-val="NO">✗ No</button>
-          <button class="yn-btn af" data-field="whatsappEmail" onclick="handleAutofail(this)">⚠ AF</button></div>
+            <button class="yn-btn no"  data-field="whatsappEmail" data-val="NO">✗ No</button></div>
         </div>
       </div>
     </div>
@@ -557,8 +571,7 @@ select option { background: #fff; color: var(--text); }
           <span class="yn-lbl">Close date is set and reflects expected close timeframe</span>
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="closeDate" data-val="YES">✓ Yes</button>
-            <button class="yn-btn no"  data-field="closeDate" data-val="NO">✗ No</button>
-          <button class="yn-btn af" data-field="closeDate" onclick="handleAutofail(this)">⚠ AF</button></div>
+            <button class="yn-btn no"  data-field="closeDate" data-val="NO">✗ No</button></div>
         </div>
       </div>
     </div>
@@ -575,8 +588,7 @@ select option { background: #fff; color: var(--text); }
           <span class="yn-lbl">A specific contact-back or postponement timeline has been set</span>
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="timeline" data-val="YES">✓ Yes</button>
-            <button class="yn-btn no"  data-field="timeline" data-val="NO">✗ No</button>
-          <button class="yn-btn af" data-field="timeline" onclick="handleAutofail(this)">⚠ AF</button></div>
+            <button class="yn-btn no"  data-field="timeline" data-val="NO">✗ No</button></div>
         </div>
       </div>
     </div>
@@ -593,8 +605,7 @@ select option { background: #fff; color: var(--text); }
           <span class="yn-lbl">Follow-up task created within 2 days for this deal</span>
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="followupTask" data-val="YES">✓ Yes</button>
-            <button class="yn-btn no"  data-field="followupTask" data-val="NO">✗ No</button>
-          <button class="yn-btn af" data-field="followupTask" onclick="handleAutofail(this)">⚠ AF</button></div>
+            <button class="yn-btn no"  data-field="followupTask" data-val="NO">✗ No</button></div>
         </div>
       </div>
     </div>
@@ -612,8 +623,7 @@ select option { background: #fff; color: var(--text); }
           <div class="yn-btns">
             <button class="yn-btn yes" data-field="dealLostReason" data-val="YES">✓ Yes</button>
             <button class="yn-btn no"  data-field="dealLostReason" data-val="NO">✗ No</button>
-            <button class="yn-btn na"  data-field="dealLostReason" data-val="N/A">— N/A</button>
-          <button class="yn-btn af" data-field="dealLostReason" onclick="handleAutofail(this)">⚠ AF</button></div>
+            <button class="yn-btn na"  data-field="dealLostReason" data-val="N/A">— N/A</button></div>
         </div>
         <div class="na-notice" id="na-notice-dealLostReason">N/A selected — full 10 pts awarded.</div>
       </div>
@@ -653,7 +663,8 @@ const TEAM = "GLOBAL";
 const answers = { correctDealStage:null, correctPipeline:null, notesDescription:null,
   whatsappEmail:null, closeDate:null, timeline:null, followupTask:null, dealLostReason:null };
 
-const autofails = {};
+// Single global autofail flag — set by the sidebar "Autofail" button.
+// When true, the whole score drops to 0 regardless of YES/NO answers.
 let autofailActive = false;
 
 const WEIGHTS = { correctDealStage:20, correctPipeline:20, notesDescription:10,
@@ -693,36 +704,21 @@ function handleYN(btn) {
   if (val==='YES') group.classList.add('ay');
   if (val==='NO')  group.classList.add('an');
   if (val==='N/A') group.classList.add('aa');
-  if (autofails[field]) group.classList.add('aaf');
   if (field==='dealLostReason')
     document.getElementById('na-notice-dealLostReason').classList.toggle('show', val==='N/A');
   refreshScore();
 }
 
-function handleAutofail(btn) {
-  const field = btn.dataset.field;
-  const group = btn.closest('.yn-group');
-  if (autofails[field]) {
-    delete autofails[field];
-    btn.classList.remove('active');
-    group.classList.remove('aaf');
-    const ans = answers[field];
-    if (ans==='YES') group.classList.add('ay');
-    else if (ans==='NO') group.classList.add('an');
-    else if (ans==='N/A') group.classList.add('aa');
-  } else {
-    autofails[field] = true;
-    btn.classList.add('active');
-    group.classList.remove('ay','an','aa');
-    group.classList.add('aaf');
-  }
-  autofailActive = Object.keys(autofails).length > 0;
+function toggleGlobalAutofail() {
+  autofailActive = !autofailActive;
+  const btn = document.getElementById('autofailToggleBtn');
+  if (btn) btn.classList.toggle('active', autofailActive);
   document.getElementById('autofailNotice').classList.toggle('show', autofailActive);
   refreshScore();
 }
 
 function calcScore() {
-  if (Object.keys(autofails).length > 0) {
+  if (autofailActive) {
     const bd = {};
     for (const k of Object.keys(WEIGHTS)) bd[k] = 0;
     return { total: 0, bd };
@@ -743,7 +739,7 @@ function refreshScore() {
   const col = total>=85?'#4ade80':total>=60?'#fbbf24':'#f87171';
   arc.style.stroke = col;
   const g = document.getElementById('score-grade'), h = document.getElementById('score-hint');
-  if (Object.keys(autofails).length > 0) {
+  if (autofailActive) {
     g.style.color='#f87171'; g.textContent='AUTOFAIL'; h.textContent='Score forced to 0';
   } else if (total===100){ g.style.color='#4ade80';g.textContent='PERFECT';h.textContent='All criteria passing'; }
   else if(total>=85){ g.style.color='#4ade80';g.textContent='COMPLIANT';h.textContent='Above 85% target'; }
@@ -751,14 +747,13 @@ function refreshScore() {
   else { g.style.color='#f87171';g.textContent='CRITICAL';h.textContent='Significant gaps found'; }
   for (const [field, pts] of Object.entries(bd)) {
     const max=WEIGHTS[field], ck=KEY_MAP[field], answered=answers[field]!==null;
-    const isAF = autofails[field] !== undefined;
     const pEl=document.getElementById(`pts-${ck}`);
     if(pEl){ pEl.textContent=`${pts} / ${max}`; pEl.className='sec-pts'+(pts===0?' z':''); }
     const chip=document.querySelector(`.sb-chip[data-key="${ck}"]`);
     const cpEl=document.getElementById(`cp-${ck}`);
     if(chip&&cpEl){
       cpEl.textContent=`${pts}/${max}`;
-      if (isAF) chip.className='sb-chip fail';
+      if (autofailActive) chip.className='sb-chip fail';
       else chip.className='sb-chip '+(!answered?'pass':answers[field]==='N/A'?'na-c':pts===max?'pass':'fail');
     }
   }
@@ -774,7 +769,7 @@ function submitAudit() {
   const {total}=calcScore();
   const effectiveAnswers = {};
   for (const k of Object.keys(answers)) {
-    effectiveAnswers[k] = autofails[k] ? 'Autofail' : (answers[k] || '');
+    effectiveAnswers[k] = autofailActive ? 'Autofail' : (answers[k] || '');
   }
   const payload={ consultantName:c, caseLink:l,
     auditDate:document.getElementById('auditDate').value, dealStage:d,
@@ -783,7 +778,7 @@ function submitAudit() {
     notesDescription:effectiveAnswers.notesDescription, whatsappEmail:effectiveAnswers.whatsappEmail,
     closeDate:effectiveAnswers.closeDate, timeline:effectiveAnswers.timeline,
     followupTask:effectiveAnswers.followupTask, dealLostReason:effectiveAnswers.dealLostReason,
-    score: Object.keys(autofails).length > 0 ? 0 : total, comments:document.getElementById('comments').value, auditorName:a, team:TEAM };
+    score: autofailActive ? 0 : total, comments:document.getElementById('comments').value, auditorName:a, team:TEAM };
 
   // OPTIMISTIC UI: show success and reset the form immediately so the auditor
   // can move on. The fetch happens in the background; if it fails, an error
@@ -845,7 +840,8 @@ function submitDealWasted() {
 
 function resetForm() {
   autofailActive = false;
-  for (const k of Object.keys(autofails)) delete autofails[k];
+  const afBtn = document.getElementById('autofailToggleBtn');
+  if (afBtn) afBtn.classList.remove('active');
   document.getElementById('autofailNotice').classList.remove('show');
   for(const k of Object.keys(answers)) answers[k]=null;
   document.querySelectorAll('.yn-btn').forEach(b=>b.classList.remove('active'));
